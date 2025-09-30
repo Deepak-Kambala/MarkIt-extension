@@ -110,7 +110,7 @@ libs/jspdf.umd.min.js: PDF generation library
 
 ## 🚀 Usage Guide
 
-Saving Highlights
+### Saving Highlights
 
 Select text on a webpage
 
@@ -118,7 +118,7 @@ Right-click → Click Save Highlight
 
 Notification confirms save
 
-Managing Highlights
+### Managing Highlights
 
 View all highlights by clicking toolbar icon
 
@@ -126,7 +126,7 @@ Delete individual highlights
 
 Clear all highlights with confirmation
 
-Exporting to PDF
+### Exporting to PDF
 
 Open extension → Click Export PDF
 
@@ -134,7 +134,7 @@ Wait for processing indicator
 
 PDF downloads automatically in browser's default folder
 
-Advanced Features
+### Advanced Features
 
 Auto-refresh: Highlights list updates every 3 seconds
 
