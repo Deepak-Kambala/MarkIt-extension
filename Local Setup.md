@@ -4,7 +4,7 @@ Follow these steps to set up the Chrome extension on your device:
 
 ---
 
-## 1. Clone this repository
+ ##1. Clone this repository
 
 git clone <repository-url>
 
