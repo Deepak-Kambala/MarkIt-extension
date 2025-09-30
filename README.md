@@ -1,36 +1,11 @@
-MarkIt - Chrome Extension
-📖 Table of Contents
-Overview
-
-Use Cases
-
-Features
-
-Technology Stack
-
-Installation Guide
-
-File Structure
-
-Usage Guide
-
-Technical Architecture
-
-API Reference
-
-Troubleshooting
-
-Development Guide
-
-Contributing
-
-License
-
+MarkIt - Chrome Extension 📖
 🎯 Overview
-Highlight Saver Pro is a powerful Chrome extension that allows users to save, manage, and export text highlights from any webpage. With a simple right-click, users can capture important text snippets along with their source URLs, organize them in a beautiful interface, and export to PDF for offline reference.
+
+MarkIt (Highlight Saver Pro) is a powerful Chrome extension that lets users save, manage, and export text highlights from any webpage. With a simple right-click, you can capture important text snippets along with their source URLs, organize them in a sleek interface, and export to PDF for offline reference.
 
 💼 Use Cases
 🎓 Academic Research
+
 Save key quotes from research papers
 
 Collect references with source links
@@ -40,6 +15,7 @@ Organize findings by topic or project
 Export compiled research to PDF
 
 💼 Professional Work
+
 Capture important information from documents
 
 Save code snippets with source references
@@ -49,6 +25,7 @@ Collect competitive intelligence
 Build knowledge bases from web content
 
 📚 Personal Learning
+
 Save inspiring quotes from articles
 
 Collect recipe instructions with sources
@@ -58,6 +35,7 @@ Build reading lists with key insights
 Create study guides from online resources
 
 🔍 Content Creation
+
 Gather reference materials for writing
 
 Save statistics and facts with sources
@@ -68,28 +46,31 @@ Build content outlines from research
 
 ✨ Features
 🔥 Core Features
+
 One-Click Highlight Saving: Right-click any selected text to save instantly
 
 Smart Source Tracking: Automatically captures page URL and timestamp
 
-Beautiful Interface: Modern, professional UI with smooth animations
+Beautiful Interface: Modern UI with smooth animations
 
 Duplicate Prevention: Prevents saving the same highlight twice
 
 Real-time Updates: Live refresh of highlights list
 
 📊 Management Features
-Visual Organization: Card-based layout with clear metadata
 
-Quick Deletion: Individual highlight removal
+Visual Organization: Card-based layout with metadata
+
+Quick Deletion: Remove highlights individually
 
 Bulk Operations: Clear all highlights with confirmation
 
-Statistics Display: Total count and today's highlights counter
+Statistics Display: Total count & today's highlights counter
 
-"NEW" Badges: Visual indicators for recently added items
+"NEW" Badges: Indicators for recently added items
 
 📤 Export Features
+
 PDF Generation: Professional document creation
 
 Automatic Formatting: Clean, readable PDF layout
@@ -101,68 +82,32 @@ Timestamped Files: Unique filenames with export dates
 Progress Indicators: Visual feedback during export
 
 🛠 Technology Stack
-Frontend Technologies
-HTML5: Semantic structure and accessibility
 
-CSS3: Modern styling with Flexbox and Grid
+Frontend: HTML5, CSS3, JavaScript (ES6+)
 
-JavaScript ES6+: Vanilla JavaScript for performance
+Chrome Extension APIs: Manifest V3, Storage API, Context Menus, Scripting API, Notifications
 
-Chrome Extension APIs
-Manifest V3: Latest extension specification
+Libraries: jsPDF 2.5.1 for PDF generation
 
-Storage API: Local data persistence
-
-Context Menus: Right-click integration
-
-Scripting API: Content script execution
-
-Notifications: User feedback system
-
-Third-party Libraries
-jsPDF 2.5.1: Client-side PDF generation
-
-Chrome APIs: Native browser integration
-
-Development Features
-Modular Architecture: Clean separation of concerns
-
-Error Handling: Comprehensive error management
-
-Cross-browser: Chrome extension compatibility
-
-Offline Capable: Works without internet connection
+Development Features: Modular architecture, error handling, offline capable, cross-browser compatible
 
 📥 Installation Guide
 Method 1: Developer Installation
-Download the Extension Files
 
-bash
-# Create project directory
-mkdir highlight-saver-pro
-cd highlight-saver-pro
-Create Required Files
+Download the extension files
 
-Create all files from the code provided in this repository
+Open Chrome → chrome://extensions/
 
-Ensure exact file names and structure
+Enable Developer mode
 
-Load in Chrome
+Click Load unpacked → Select extension folder
 
-Open Chrome and navigate to chrome://extensions/
-
-Enable "Developer mode" (toggle in top-right)
-
-Click "Load unpacked"
-
-Select your extension folder
-
-Extension should appear in toolbar
+Extension icon appears in toolbar
 
 Method 2: Manual Setup
-Create Folder Structure
 
-text
+Create folder structure:
+
 highlight-saver-pro/
 ├── manifest.json
 ├── popup.html
@@ -170,114 +115,65 @@ highlight-saver-pro/
 ├── background.js
 └── libs/
     └── jspdf.umd.min.js
-Download jsPDF Library
 
-Visit: https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 
-Save as libs/jspdf.umd.min.js
+Download jsPDF library:
+https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 
-Copy Code Files
-
-Copy each file's content exactly as provided
-
-Maintain file names and extensions
+Copy all code files into this structure
 
 📁 File Structure
-text
-highlight-saver-pro/
-│
-├── manifest.json          # Extension configuration
-├── popup.html            # Main extension popup UI
-├── popup.js              # Popup functionality and PDF export
-├── background.js         # Background service worker
-│
-└── libs/
-    └── jspdf.umd.min.js  # PDF generation library
-File Descriptions
-manifest.json
-Extension metadata and permissions
 
-Manifest V3 specification
+manifest.json: Extension metadata & permissions
 
-Required API declarations
+popup.html: Main popup UI
 
-popup.html
-Main user interface
+popup.js: Core logic (storage, PDF export, UI events)
 
-Responsive design with modern CSS
+background.js: Background service worker (context menus, notifications)
 
-Structured HTML with semantic markup
-
-popup.js
-Core application logic
-
-Chrome storage management
-
-PDF generation and export
-
-UI event handling
-
-background.js
-Background service worker
-
-Context menu management
-
-Notification system
-
-Cross-tab communication
-
-libs/jspdf.umd.min.js
-PDF generation library
-
-Local dependency for offline use
-
-Universal module definition format
+libs/jspdf.umd.min.js: PDF generation library
 
 🚀 Usage Guide
 Saving Highlights
-Select Text: Highlight any text on a webpage
 
-Right-Click: Open context menu
+Select text on a webpage
 
-Save Highlight: Click "Save Highlight" option
+Right-click → Click Save Highlight
 
-Confirmation: Notification confirms save
+Notification confirms save
 
 Managing Highlights
-View All: Click extension icon in toolbar
 
-Browse: Scroll through saved highlights
+View all highlights by clicking toolbar icon
 
-Delete Individual: Click "Delete" on any highlight
+Delete individual highlights
 
-Clear All: Use "Clear All" button (with confirmation)
+Clear all highlights with confirmation
 
 Exporting to PDF
-Open Extension: Click toolbar icon
 
-Export: Click "Export PDF" button
+Open extension → Click Export PDF
 
-Wait: Processing indicator appears
+Wait for processing indicator
 
-Download: PDF automatically downloads
-
-Location: Check browser's download folder
+PDF downloads automatically in browser's default folder
 
 Advanced Features
-Auto-refresh: List updates every 3 seconds
 
-Source Links: Click URLs to visit original pages
+Auto-refresh: Highlights list updates every 3 seconds
 
-Date Filtering: "NEW" badges for today's items
+Source links: Clickable URLs for original pages
 
-Duplicate Protection: Prevents identical saves
+Date filtering: "NEW" badges for today's items
+
+Duplicate prevention: Avoid saving identical highlights
 
 🏗 Technical Architecture
 Data Flow
-text
 Web Page → Context Menu → Background Script → Storage → Popup UI → PDF Export
+
 Storage Schema
-javascript
 {
   "highlights": [
     {
@@ -287,24 +183,37 @@ javascript
     }
   ]
 }
+
 Component Architecture
-Background Service Worker
-Context Menu Handler: Listens for right-click events
 
-Storage Manager: Coordinates data persistence
+Background Service Worker: Context menu, notifications, storage management
 
-Notification System: User feedback provider
+Popup Interface: UI controller, data binder, PDF generator
 
-Popup Interface
-UI Controller: Manages visual elements
+Content Scripts: Text capture, source detection, data packaging
 
-Data Binder: Syncs storage with display
+🛠 Troubleshooting
 
-PDF Generator: Creates export documents
+PDF not downloading → Ensure libs/jspdf.umd.min.js is correctly loaded
 
-Content Scripts
-Text Capture: Extracts selected text
+Highlights not saving → Check Chrome storage permissions
 
-Source Detection: Gets page URL context
+Extension not appearing → Reload unpacked extension
 
-Data Packaging: Formats highlight data
+🏗 Development Guide
+
+Maintain modular file structure
+
+Use console logs for debugging
+
+Follow Chrome Extension Manifest V3 guidelines
+
+🤝 Contributing
+
+Fork repository
+
+Create a feature branch
+
+Commit changes → Push
+
+Open a pull request
