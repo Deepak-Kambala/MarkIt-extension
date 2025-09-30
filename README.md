@@ -96,7 +96,7 @@ https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
 
 Copy all code files into this structure
 
-📁 File Structure
+## 📁 File Structure
 
 manifest.json: Extension metadata & permissions
 
@@ -108,7 +108,8 @@ background.js: Background service worker (context menus, notifications)
 
 libs/jspdf.umd.min.js: PDF generation library
 
-🚀 Usage Guide
+## 🚀 Usage Guide
+
 Saving Highlights
 
 Select text on a webpage
@@ -143,11 +144,11 @@ Date filtering: "NEW" badges for today's items
 
 Duplicate prevention: Avoid saving identical highlights
 
-🏗 Technical Architecture
-Data Flow
+# 🏗 Technical Architecture
+## Data Flow
 Web Page → Context Menu → Background Script → Storage → Popup UI → PDF Export
 
-Storage Schema
+## Storage Schema
 {
   "highlights": [
     {
@@ -158,7 +159,7 @@ Storage Schema
   ]
 }
 
-Component Architecture
+## Component Architecture
 
 Background Service Worker: Context menu, notifications, storage management
 
@@ -166,7 +167,7 @@ Popup Interface: UI controller, data binder, PDF generator
 
 Content Scripts: Text capture, source detection, data packaging
 
-🛠 Troubleshooting
+## 🛠 Troubleshooting
 
 PDF not downloading → Ensure libs/jspdf.umd.min.js is correctly loaded
 
@@ -174,7 +175,7 @@ Highlights not saving → Check Chrome storage permissions
 
 Extension not appearing → Reload unpacked extension
 
-🏗 Development Guide
+## 🏗 Development Guide
 
 Maintain modular file structure
 
@@ -182,7 +183,7 @@ Use console logs for debugging
 
 Follow Chrome Extension Manifest V3 guidelines
 
-🤝 Contributing
+## 🤝 Contributing
 
 Fork repository
 
