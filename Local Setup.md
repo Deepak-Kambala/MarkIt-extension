@@ -5,7 +5,7 @@ Follow these steps to set up the Chrome extension on your device:
 ---
 
 ## 1. Clone this repository
-```bash
+
 git clone <repository-url>
 
 ##2. Open Chrome Extensions
