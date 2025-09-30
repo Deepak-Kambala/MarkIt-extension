@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Highlight Saver</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      width: 420px;
+      min-height: 500px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .header .subtitle {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 12px;
+      font-size: 11px;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 12px;
+      border-radius: 12px;
+    }
+
+    .highlights-container {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      background: #f8fafc;
+    }
+
+    .no-highlights {
+      text-align: center;
+      color: #64748b;
+      padding: 60px 20px;
+    }
+
+    .no-highlights .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .no-highlights h3 {
+      margin-bottom: 8px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .no-highlights p {
+      font-size: 13px;
+      line-height: 1.5;
+      opacity: 0.8;
+    }
+
+    .highlight-item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .highlight-item:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .highlight-text {
+      color: #1e293b;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      word-wrap: break-word;
+      font-style: italic;
+    }
+
+    .highlight-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .highlight-source {
+      color: #667eea;
+      font-size: 11px;
+      font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .highlight-source:hover {
+      text-decoration: underline;
+    }
+
+    .highlight-date {
+      color: #94a3b8;
+      font-size: 10px;
+    }
+
+    .highlight-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .delete-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .delete-btn:hover {
+      background: #dc2626;
+      transform: scale(1.05);
+    }
+
+    .footer {
+      background: white;
+      padding: 16px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .clear-btn {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .clear-btn:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+
+    .export-btn {
+      background: #667eea;
+      color: white;
+    }
+
+    .export-btn:hover {
+      background: #5a6fd8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .highlights-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .highlights-container::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 3px;
+    }
+
+    .highlights-container::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .highlights-container::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .new-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #10b981;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 10px;
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>Saved Notes</h1>
+    <div class="subtitle">Your saved text selections across the web</div>
+    <div class="stats">
+      <div class="stat-item" id="totalCount">0 highlights</div>
+      <div class="stat-item" id="todayCount">0 today</div>
+    </div>
+  </div>
+
+  <!-- Highlights Container -->
+  <div class="highlights-container" id="highlightsContainer">
+    <!-- Highlights will be loaded here by JavaScript -->
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="loading" id="loadingIndicator">
+    Generating PDF... Please wait
+  </div>
+
+  <!-- Footer Actions -->
+  <div class="footer">
+    <button id="clearBtn" class="action-btn clear-btn">
+      Clear All
+    </button>
+    <button id="exportBtn" class="action-btn export-btn">
+      Export PDF
+    </button>
+  </div>
+
+  <!-- Local jsPDF -->
+  <script src="libs/jspdf.umd.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "MarkIt",
+  "version": "1.3",
+  "description": "Easily highlight, save, and organize text from any webpage. Keep your important notes handy and export them to PDF with a click!",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "scripting",
+    "activeTab",
+    "notifications"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["libs/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
