@@ -88,3 +88,105 @@ highlight-saver-pro/
 ├── background.js
 └── libs/
     └── jspdf.umd.min.js
+
+
+Download jsPDF library:
+https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
+
+Copy all code files into this structure
+
+📁 File Structure
+
+manifest.json: Extension metadata & permissions
+
+popup.html: Main popup UI
+
+popup.js: Core logic (storage, PDF export, UI events)
+
+background.js: Background service worker (context menus, notifications)
+
+libs/jspdf.umd.min.js: PDF generation library
+
+🚀 Usage Guide
+Saving Highlights
+
+Select text on a webpage
+
+Right-click → Click Save Highlight
+
+Notification confirms save
+
+Managing Highlights
+
+View all highlights by clicking toolbar icon
+
+Delete individual highlights
+
+Clear all highlights with confirmation
+
+Exporting to PDF
+
+Open extension → Click Export PDF
+
+Wait for processing indicator
+
+PDF downloads automatically in browser's default folder
+
+Advanced Features
+
+Auto-refresh: Highlights list updates every 3 seconds
+
+Source links: Clickable URLs for original pages
+
+Date filtering: "NEW" badges for today's items
+
+Duplicate prevention: Avoid saving identical highlights
+
+🏗 Technical Architecture
+Data Flow
+Web Page → Context Menu → Background Script → Storage → Popup UI → PDF Export
+
+Storage Schema
+{
+  "highlights": [
+    {
+      "text": "Selected text content",
+      "source": "https://original-page-url.com",
+      "date": "2024-01-15 14:30:25"
+    }
+  ]
+}
+
+Component Architecture
+
+Background Service Worker: Context menu, notifications, storage management
+
+Popup Interface: UI controller, data binder, PDF generator
+
+Content Scripts: Text capture, source detection, data packaging
+
+🛠 Troubleshooting
+
+PDF not downloading → Ensure libs/jspdf.umd.min.js is correctly loaded
+
+Highlights not saving → Check Chrome storage permissions
+
+Extension not appearing → Reload unpacked extension
+
+🏗 Development Guide
+
+Maintain modular file structure
+
+Use console logs for debugging
+
+Follow Chrome Extension Manifest V3 guidelines
+
+🤝 Contributing
+
+Fork repository
+
+Create a feature branch
+
+Commit changes → Push
+
+Open a pull request
