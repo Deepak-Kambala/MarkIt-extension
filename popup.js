@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const highlightsContainer = document.getElementById('highlightsContainer');
     const clearBtn = document.getElementById('clearBtn');
+    const openAllBtn = document.getElementById('openAllBtn');
     const exportBtn = document.getElementById('exportBtn');
     const totalCount = document.getElementById('totalCount');
     const todayCount = document.getElementById('todayCount');
@@ -134,6 +135,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // open All links
+    openAllBtn.addEventListener('click', function() {
+        if (currentHighlights.length === 0) {
+            alert('No highlights with links to open!');
+            return;
+        }
+
+        const uniqueSources = [...new Set(currentHighlights.map(h => h.source))];
+
+        if (confirm(`Open all ${uniqueSources.length} unique links in new tabs?`)) {
+            uniqueSources.forEach(link => {
+                chrome.tabs.create({ url: link });
+            });
+        }
+    });
     // Export to PDF - SIMPLIFIED AND GUARANTEED TO WORK
     exportBtn.addEventListener('click', function() {
         if (currentHighlights.length === 0) {
@@ -192,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Source
                 doc.setFontSize(9);
                 doc.setTextColor(0, 0, 255);
-                doc.text(`Source: ${highlight.source}`, margin, y);
+                doc.textWithLink(`Source: ${highlight.source}`, margin, y, { url: highlight.source });
                 y += 5;
 
                 // Date
@@ -204,6 +220,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 doc.setTextColor(0, 0, 0);
             });
 
+            // 🔁 Repeat "All Links" at the bottom (optional)
+            if (y > pageHeight - 60) {
+                doc.addPage();
+                y = 20;
+            }
+            const uniqueSources = [...new Set(currentHighlights.map(h => h.source).filter(Boolean))];
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 255);
+            doc.setFont(undefined, 'bold');
+            doc.text('All Links(unique)', margin, y);
+            y += 8;
+
+            uniqueSources.forEach(link => {
+                const linkText = link.length > 80 ? link.substring(0, 80) + '...' : link;
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'normal');
+                doc.textWithLink(linkText, margin, y, { url: link });
+                y += 6;
+            });
+            
             // Generate filename with timestamp
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `highlights-${timestamp}.pdf`;
