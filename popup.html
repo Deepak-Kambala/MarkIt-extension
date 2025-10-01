@@ -139,7 +139,16 @@
       justify-content: flex-end;
       gap: 8px;
     }
-
+    .open-btn {
+      background: #10b981;
+      color: white;
+    }
+    .open-btn:hover {
+      background: #0ea669;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    
     .delete-btn {
       background: #ef4444;
       color: white;
@@ -271,6 +280,9 @@
   <div class="footer">
     <button id="clearBtn" class="action-btn clear-btn">
       Clear All
+    </button>
+    <button id="openAllBtn" class="action-btn open-btn">
+      Open All Links
     </button>
     <button id="exportBtn" class="action-btn export-btn">
       Export PDF
