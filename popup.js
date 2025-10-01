@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Add title
             doc.setFontSize(20);
-            doc.text('My Highlights Export', 20, 20);
+            doc.text('My MarkIt Highlights', 20, 20);
 
             // Add export info
             doc.setFontSize(12);
