@@ -2,7 +2,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const highlightsContainer = document.getElementById('highlightsContainer');
     const clearBtn = document.getElementById('clearBtn');
     const openAllBtn = document.getElementById('openAllBtn');
-    const exportBtn = document.getElementById('exportBtn');
+    const exportImportMenu = document.getElementById('exportImportMenu');
+    const exportImportBtn = document.getElementById('exportImportBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const exportJsonBtn = document.getElementById('exportJsonBtn');
+    const importJsonBtn = document.getElementById('importJsonBtn');
     const totalCount = document.getElementById('totalCount');
     const todayCount = document.getElementById('todayCount');
     const loadingIndicator = document.getElementById('loadingIndicator');
@@ -150,8 +154,76 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    exportImportBtn.addEventListener('click', () => {
+        exportImportMenu.classList.toggle('hidden');
+    });
+
+    exportJsonBtn.addEventListener('click', function() {
+        if (currentHighlights.length === 0) {
+            alert('No highlights to export!');
+            return;
+        }
+
+        const dataStr = JSON.stringify(currentHighlights, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        a.download = `highlights-${timestamp}.json`;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    });
+
+    importJsonBtn.addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedHighlights = JSON.parse(e.target.result);
+
+                    if (!Array.isArray(importedHighlights)) {
+                        alert('Invalid JSON format!');
+                        return;
+                    }
+
+                    // Merge with current highlights and remove duplicates by source+text
+                    const mergedHighlights = [...currentHighlights];
+
+                    importedHighlights.forEach(h => {
+                        if (!mergedHighlights.some(ch => ch.text === h.text && ch.source === h.source)) {
+                            mergedHighlights.push(h);
+                        }
+                    });
+
+                    // Save merged highlights
+                    chrome.storage.local.set({ highlights: mergedHighlights }, function() {
+                        loadHighlights();
+                        alert(`Imported ${importedHighlights.length} highlights successfully!`);
+                    });
+
+                } catch (err) {
+                    alert('Error reading JSON: ' + err.message);
+                }
+            };
+
+            reader.readAsText(file);
+        };
+
+        input.click();
+    });
+
     // Export to PDF - SIMPLIFIED AND GUARANTEED TO WORK
-    exportBtn.addEventListener('click', function() {
+    exportPdfBtn.addEventListener('click', function() {
         if (currentHighlights.length === 0) {
             alert('No highlights to export!');
             return;
@@ -164,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Show loading indicator
         loadingIndicator.style.display = 'block';
-        exportBtn.disabled = true;
+        exportPdfBtn.disabled = true;
 
         try {
             // Use the local jsPDF library
@@ -251,15 +323,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Hide loading indicator
             setTimeout(() => {
                 loadingIndicator.style.display = 'none';
-                exportBtn.disabled = false;
+                exportPdfBtn.disabled = false;
                 alert(`PDF exported successfully! Saved as: ${filename}`);
             }, 1000);
 
         } catch (error) {
             console.error('PDF export error:', error);
             loadingIndicator.style.display = 'none';
-            exportBtn.disabled = false;
+            exportPdfBtn.disabled = false;
             alert('Error generating PDF: ' + error.message);
+        }
+    });
+    document.addEventListener('click', (e) => {
+        if (!exportImportBtn.contains(e.target) && !exportImportMenu.contains(e.target)) {
+            exportImportMenu.classList.add('hidden');
         }
     });
 
