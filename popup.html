@@ -252,6 +252,37 @@
       padding: 10px;
       color: #667eea;
     }
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .menu-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .sub-btn {
+      background: #374151;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sub-btn:hover {
+      background: #4b5563;
+      transform: translateY(-1px);
+    }
+
   </style>
 </head>
 <body>
@@ -283,9 +314,16 @@
     <button id="openAllBtn" class="action-btn open-btn">
       Open All Links
     </button>    
-    <button id="exportBtn" class="action-btn export-btn">
-      Export PDF
+    <button id="exportImportBtn" class="action-btn menu-btn">
+      Export / Import
     </button>
+
+    <div id="exportImportMenu" class="menu hidden">
+      <button id="exportPdfBtn" class="sub-btn">Export to PDF</button>
+      <button id="exportJsonBtn" class="sub-btn">Export to JSON</button>
+      <button id="importJsonBtn" class="sub-btn">Import from JSON</button>
+    </div>
+
   </div>
 
   <!-- Local jsPDF -->
