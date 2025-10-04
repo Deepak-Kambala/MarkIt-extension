@@ -185,10 +185,44 @@ Follow Chrome Extension Manifest V3 guidelines
 
 ## 🤝 Contributing
 
-Fork repository
+We love contributions! Here's how you can help:
 
-Create a feature branch
+### 🎯 For Hacktoberfest Participants:
+Look for issues labeled hacktoberfest or good-first-issue
 
-Commit changes → Push
+Check the help-wanted tag for specific needs
 
-Open a pull request
+## 📝 Contribution Steps:
+⭐ Star the repository (Required)
+
+👤 Follow my profile (Required)
+
+🍴 Fork the repository
+
+🌿 Create a feature branch
+
+```
+git checkout -b amazing-feature
+```
+💾 Commit your changes
+
+```
+git commit -m 'Add amazing feature'
+```
+📤 Push to branch
+
+```
+git push origin amazing-feature
+```
+🔔 Open a Pull Request
+
+# ⚠️ IMPORTANT: Your PR will only be accepted if you've starred the repo and followed my profile!
+
+## 📄 License
+This project is licensed under the MIT License — see the LICENSE file for details.
+
+# 👨‍💻 Maintainer
+Deepak Kambala
+
+Passionate about creating fun web experiences 🚀
+
