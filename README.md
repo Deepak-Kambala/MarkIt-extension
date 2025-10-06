@@ -218,7 +218,7 @@ git push origin amazing-feature
 ```
 🔔 Open a Pull Request
 
-# ⚠️ IMPORTANT: Your PR will only be accepted if you've starred the repo and followed my profile!
+
 
 ## 📄 License
 This project is licensed under the MIT License — see the LICENSE file for details.
