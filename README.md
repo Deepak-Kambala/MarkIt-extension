@@ -195,9 +195,9 @@ Look for issues labeled hacktoberfest or good-first-issue
 Check the help-wanted tag for specific needs
 
 ## 📝 Contribution Steps:
-⭐ Star the repository (Required)
+⭐ Star the repository 
 
-👤 Follow my profile (Required)
+
 
 🍴 Fork the repository
 
