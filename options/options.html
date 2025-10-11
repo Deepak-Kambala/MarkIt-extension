@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MarkIt Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Extension Settings</h1>
+
+      <label>
+        <input type="checkbox" id="darkMode" />
+        Enable Dark Mode
+      </label>
+
+      <label>
+        Auto Refresh Interval (seconds):
+        <input type="number" id="refreshInterval" min="0" step="1" />
+      </label>
+
+      <label>
+        Export Format:
+        <select id="exportFormat">
+          <option value="json">JSON</option>
+          <option value="csv">CSV</option>
+          <option value="txt">TXT</option>
+        </select>
+      </label>
+
+      <div>
+        <button id="save">Save Settings</button>
+        <span id="status"></span>
+      </div>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

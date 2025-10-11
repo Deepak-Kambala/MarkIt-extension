@@ -1,0 +1,19 @@
+body {
+  font-family: system-ui, sans-serif;
+  padding: 16px;
+}
+
+main {
+  max-width: 600px;
+  margin: auto;
+}
+
+label {
+  display: block;
+  margin: 12px 0;
+}
+
+button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
