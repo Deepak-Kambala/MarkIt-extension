@@ -10,9 +10,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalCount = document.getElementById('totalCount');
     const todayCount = document.getElementById('todayCount');
     const loadingIndicator = document.getElementById('loadingIndicator');
+    
+    // Search and filter elements
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const searchResultsInfo = document.getElementById('searchResultsInfo');
+    const filterButtons = document.querySelectorAll('.filter-btn');
 
     let currentHighlights = [];
+    let filteredHighlights = [];
     let isPdfReady = false;
+    let currentSearchTerm = '';
+    let currentDateFilter = 'all';
 
     // Check if PDF library is available
     function checkPdfLibrary() {
@@ -30,26 +39,142 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check PDF library after a short delay
     setTimeout(checkPdfLibrary, 100);
 
+    // Search input event listener
+    searchInput.addEventListener('input', function(e) {
+        currentSearchTerm = e.target.value.trim();
+        
+        if (currentSearchTerm) {
+            clearSearchBtn.classList.add('visible');
+        } else {
+            clearSearchBtn.classList.remove('visible');
+        }
+        
+        applyFilters();
+    });
+
+    // Clear search button
+    clearSearchBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        currentSearchTerm = '';
+        clearSearchBtn.classList.remove('visible');
+        applyFilters();
+        searchInput.focus();
+    });
+
+    // Filter buttons event listeners
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentDateFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+
     function loadHighlights() {
         chrome.storage.local.get({ highlights: [] }, function(result) {
             currentHighlights = result.highlights || [];
-            displayHighlights(currentHighlights);
+            applyFilters();
             updateStats(currentHighlights);
         });
+    }
+
+    function applyFilters() {
+        // Start with all highlights
+        filteredHighlights = [...currentHighlights];
+
+        // Apply date filter
+        filteredHighlights = filterByDate(filteredHighlights, currentDateFilter);
+
+        // Apply search filter
+        if (currentSearchTerm) {
+            filteredHighlights = searchHighlights(filteredHighlights, currentSearchTerm);
+        }
+
+        displayHighlights(filteredHighlights);
+        updateSearchInfo(filteredHighlights.length, currentHighlights.length);
+    }
+
+    function filterByDate(highlights, filter) {
+        if (filter === 'all') return highlights;
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        return highlights.filter(h => {
+            const highlightDate = new Date(h.date);
+            
+            switch(filter) {
+                case 'today':
+                    return highlightDate >= today;
+                
+                case 'week':
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return highlightDate >= weekAgo;
+                
+                case 'month':
+                    const monthAgo = new Date(today);
+                    monthAgo.setMonth(monthAgo.getMonth() - 1);
+                    return highlightDate >= monthAgo;
+                
+                default:
+                    return true;
+            }
+        });
+    }
+
+    function searchHighlights(highlights, searchTerm) {
+        const term = searchTerm.toLowerCase();
+        
+        return highlights.filter(h => {
+            // Search in text
+            const textMatch = h.text.toLowerCase().includes(term);
+            
+            // Search in source/domain
+            let sourceMatch = false;
+            try {
+                const domain = new URL(h.source).hostname;
+                sourceMatch = domain.toLowerCase().includes(term) || 
+                             h.source.toLowerCase().includes(term);
+            } catch (e) {
+                sourceMatch = h.source.toLowerCase().includes(term);
+            }
+            
+            // Search in date
+            const dateMatch = formatDate(h.date).toLowerCase().includes(term);
+            
+            return textMatch || sourceMatch || dateMatch;
+        });
+    }
+
+    function updateSearchInfo(filteredCount, totalCount) {
+        if (currentSearchTerm || currentDateFilter !== 'all') {
+            searchResultsInfo.textContent = `Showing ${filteredCount} of ${totalCount} highlights`;
+        } else {
+            searchResultsInfo.textContent = '';
+        }
     }
 
     function displayHighlights(highlights) {
         highlightsContainer.innerHTML = '';
 
         if (!highlights || highlights.length === 0) {
-            showNoHighlights();
+            if (currentSearchTerm || currentDateFilter !== 'all') {
+                showNoResults();
+            } else {
+                showNoHighlights();
+            }
             return;
         }
 
         const sortedHighlights = highlights.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         sortedHighlights.forEach((highlight, index) => {
-            const highlightElement = createHighlightElement(highlight, index);
+            const originalIndex = currentHighlights.findIndex(h => 
+                h.text === highlight.text && h.date === highlight.date && h.source === highlight.source
+            );
+            const highlightElement = createHighlightElement(highlight, originalIndex);
             highlightsContainer.appendChild(highlightElement);
         });
     }
@@ -58,9 +183,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const div = document.createElement('div');
         div.className = 'highlight-item';
 
-        const displayText = highlight.text.length > 200 
+        let displayText = highlight.text.length > 200 
             ? highlight.text.substring(0, 200) + '...' 
             : highlight.text;
+
+        // Highlight search term in text
+        if (currentSearchTerm) {
+            displayText = highlightSearchTerm(displayText, currentSearchTerm);
+        }
 
         let domain = 'Unknown source';
         try {
@@ -73,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         div.innerHTML = `
             ${isToday ? '<div class="new-badge">NEW</div>' : ''}
-            <div class="highlight-text">"${escapeHtml(displayText)}"</div>
+            <div class="highlight-text">"${displayText}"</div>
             <div class="highlight-meta">
                 <a href="${highlight.source}" target="_blank" class="highlight-source">
                     ${domain}
@@ -93,12 +223,34 @@ document.addEventListener('DOMContentLoaded', function() {
         return div;
     }
 
+    function highlightSearchTerm(text, searchTerm) {
+        if (!searchTerm) return escapeHtml(text);
+        
+        const escapedText = escapeHtml(text);
+        const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+        return escapedText.replace(regex, '<mark>$1</mark>');
+    }
+
+    function escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     function showNoHighlights() {
         highlightsContainer.innerHTML = `
             <div class="no-highlights">
                 <div class="icon">📚</div>
                 <h3>No Highlights Yet</h3>
                 <p>Select text on any webpage, right-click, and choose<br>"Save Highlight" to save your first highlight!</p>
+            </div>
+        `;
+    }
+
+    function showNoResults() {
+        highlightsContainer.innerHTML = `
+            <div class="no-highlights">
+                <div class="icon">🔍</div>
+                <h3>No Results Found</h3>
+                <p>Try adjusting your search or filter criteria.<br>Clear filters to see all highlights.</p>
             </div>
         `;
     }
@@ -139,21 +291,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // open All links
+    // Open all links
     openAllBtn.addEventListener('click', function() {
-        if (currentHighlights.length === 0) {
+        const highlightsToOpen = filteredHighlights.length > 0 ? filteredHighlights : currentHighlights;
+        
+        if (highlightsToOpen.length === 0) {
             alert('No highlights with links to open!');
             return;
         }
 
-        const uniqueSources = [...new Set(currentHighlights.map(h => h.source))];
+        const uniqueSources = [...new Set(highlightsToOpen.map(h => h.source))];
 
-        if (confirm(`Open all ${uniqueSources.length} unique links in new tabs?`)) {
+        const message = filteredHighlights.length > 0 && filteredHighlights.length < currentHighlights.length
+            ? `Open all ${uniqueSources.length} unique links from filtered results in new tabs?`
+            : `Open all ${uniqueSources.length} unique links in new tabs?`;
+
+        if (confirm(message)) {
             uniqueSources.forEach(link => {
                 chrome.tabs.create({ url: link });
             });
         }
     });
+
     exportImportBtn.addEventListener('click', () => {
         exportImportMenu.classList.toggle('hidden');
     });
@@ -196,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
 
-                    // Merge with current highlights and remove duplicates by source+text
                     const mergedHighlights = [...currentHighlights];
 
                     importedHighlights.forEach(h => {
@@ -205,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
 
-                    // Save merged highlights
                     chrome.storage.local.set({ highlights: mergedHighlights }, function() {
                         loadHighlights();
                         alert(`Imported ${importedHighlights.length} highlights successfully!`);
@@ -222,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function() {
         input.click();
     });
 
-    // Export to PDF - SIMPLIFIED AND GUARANTEED TO WORK
     exportPdfBtn.addEventListener('click', function() {
         if (currentHighlights.length === 0) {
             alert('No highlights to export!');
@@ -234,19 +390,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Show loading indicator
         loadingIndicator.style.display = 'block';
         exportPdfBtn.disabled = true;
 
         try {
-            // Use the local jsPDF library
             const doc = new jspdf.jsPDF();
 
-            // Add title
             doc.setFontSize(20);
             doc.text('My MarkIt Highlights', 20, 20);
 
-            // Add export info
             doc.setFontSize(12);
             doc.text(`Exported on: ${new Date().toLocaleString()}`, 20, 35);
             doc.text(`Total Highlights: ${currentHighlights.length}`, 20, 45);
@@ -256,43 +408,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const margin = 20;
             const maxWidth = 170;
 
-            // Add each highlight
             currentHighlights.forEach((highlight, index) => {
-                // Check if we need a new page
                 if (y > pageHeight - 40) {
                     doc.addPage();
                     y = 20;
                 }
 
-                // Highlight number
                 doc.setFontSize(14);
                 doc.setFont(undefined, 'bold');
                 doc.text(`Highlight ${index + 1}:`, margin, y);
                 y += 8;
 
-                // Highlight text
                 doc.setFontSize(10);
                 doc.setFont(undefined, 'normal');
                 const textLines = doc.splitTextToSize(highlight.text, maxWidth);
                 doc.text(textLines, margin, y);
                 y += textLines.length * 5 + 5;
 
-                // Source
                 doc.setFontSize(9);
                 doc.setTextColor(0, 0, 255);
                 doc.textWithLink(`Source: ${highlight.source}`, margin, y, { url: highlight.source });
                 y += 5;
 
-                // Date
                 doc.setTextColor(100, 100, 100);
                 doc.text(`Saved: ${highlight.date}`, margin, y);
                 y += 15;
 
-                // Reset text color
                 doc.setTextColor(0, 0, 0);
             });
 
-            // 🔁 Repeat "All Links" at the bottom (optional)
             if (y > pageHeight - 60) {
                 doc.addPage();
                 y = 20;
@@ -302,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.setFontSize(11);
             doc.setTextColor(0, 0, 255);
             doc.setFont(undefined, 'bold');
-            doc.text('All Links(unique)', margin, y);
+            doc.text('All Links (unique)', margin, y);
             y += 8;
 
             uniqueSources.forEach(link => {
@@ -313,14 +457,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 y += 6;
             });
             
-            // Generate filename with timestamp
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `highlights-${timestamp}.pdf`;
 
-            // Save the PDF - this should trigger download
             doc.save(filename);
 
-            // Hide loading indicator
             setTimeout(() => {
                 loadingIndicator.style.display = 'none';
                 exportPdfBtn.disabled = false;
@@ -334,6 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Error generating PDF: ' + error.message);
         }
     });
+
     document.addEventListener('click', (e) => {
         if (!exportImportBtn.contains(e.target) && !exportImportMenu.contains(e.target)) {
             exportImportMenu.classList.add('hidden');
