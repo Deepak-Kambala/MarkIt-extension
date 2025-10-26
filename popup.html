@@ -16,7 +16,7 @@
       background: #f8fafc;
       display: flex;
       flex-direction: column;
-      position: relative; /* required for fixed footer */
+      position: relative;
     }
 
     .header {
@@ -51,12 +51,105 @@
       border-radius: 12px;
     }
 
+    /* Search Bar Styles */
+    .search-container {
+      padding: 16px;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 36px 10px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      font-size: 16px;
+      display: none;
+      transition: color 0.2s;
+    }
+
+    .clear-search-btn:hover {
+      color: #64748b;
+    }
+
+    .clear-search-btn.visible {
+      display: block;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .filter-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .filter-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .search-results-info {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #64748b;
+      text-align: center;
+    }
+
     .highlights-container {
       flex: 1;
       padding: 16px;
       overflow-y: auto;
       background: #f8fafc;
-      margin-bottom: 70px; /* space for footer */
+      margin-bottom: 70px;
     }
 
     .no-highlights {
@@ -94,6 +187,10 @@
       position: relative;
     }
 
+    .highlight-item.hidden {
+      display: none;
+    }
+
     .highlight-item:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       transform: translateY(-1px);
@@ -106,6 +203,12 @@
       margin-bottom: 12px;
       word-wrap: break-word;
       font-style: italic;
+    }
+
+    .highlight-text mark {
+      background: #fef08a;
+      padding: 2px 0;
+      border-radius: 2px;
     }
 
     .highlight-meta {
@@ -139,15 +242,18 @@
       justify-content: flex-end;
       gap: 8px;
     }
+
     .open-btn {
       background: #10b981;
       color: white;
     }
+
     .open-btn:hover {
       background: #0ea669;
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
     }
+
     .delete-btn {
       background: #ef4444;
       color: white;
@@ -252,6 +358,7 @@
       padding: 10px;
       color: #667eea;
     }
+
     .menu {
       display: flex;
       flex-direction: column;
@@ -282,7 +389,6 @@
       background: #4b5563;
       transform: translateY(-1px);
     }
-
   </style>
 </head>
 <body>
@@ -294,6 +400,26 @@
       <div class="stat-item" id="totalCount">0 highlights</div>
       <div class="stat-item" id="todayCount">0 today</div>
     </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-container">
+    <div class="search-wrapper">
+      <input 
+        type="text" 
+        id="searchInput" 
+        class="search-input" 
+        placeholder="Search by text, source, or date..."
+      >
+      <button id="clearSearchBtn" class="clear-search-btn">✕</button>
+    </div>
+    <div class="filter-buttons">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="today">Today</button>
+      <button class="filter-btn" data-filter="week">This Week</button>
+      <button class="filter-btn" data-filter="month">This Month</button>
+    </div>
+    <div id="searchResultsInfo" class="search-results-info"></div>
   </div>
 
   <!-- Highlights Container -->
@@ -323,7 +449,6 @@
       <button id="exportJsonBtn" class="sub-btn">Export to JSON</button>
       <button id="importJsonBtn" class="sub-btn">Import from JSON</button>
     </div>
-
   </div>
 
   <!-- Local jsPDF -->
