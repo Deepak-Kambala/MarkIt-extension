@@ -510,4 +510,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Refresh highlights every 3 seconds when popup is open
     setInterval(loadHighlights, 3000);
+
+    // ~Export highlights to JSON file
+function exportToJSON(highlights) {
+  const blob = new Blob([JSON.stringify(highlights, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "highlights.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+// ~Export highlights to CSV file
+function exportToCSV(highlights) {
+  if (!highlights.length) return;
+  const headers = Object.keys(highlights[0]);
+  const rows = highlights.map(obj => headers.map(header => JSON.stringify(obj[header] || "")).join(","));
+  const csv = [headers.join(","), ...rows].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "highlights.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+// ~Handle JSON export button click
+document.getElementById("export-json").addEventListener("click", () => {
+  chrome.storage.local.get("highlights", (result) => {
+    const highlights = result.highlights || [];
+    exportToJSON(highlights);
+  });
+});
+// ~Handle CSV export button click
+document.getElementById("export-csv").addEventListener("click", () => {
+  chrome.storage.local.get("highlights", (result) => {
+    const highlights = result.highlights || [];
+    exportToCSV(highlights);
+  });
+});
+
 });
