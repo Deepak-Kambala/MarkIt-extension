@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Highlight Saver</title>
   <style>
@@ -241,6 +242,126 @@
       display: flex;
       justify-content: flex-end;
       gap: 8px;
+      align-items: center;
+    }
+
+    /* Copy Button Styles */
+    .copy-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+
+    .copy-btn:hover {
+      background: #2563eb;
+      transform: scale(1.05);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.95);
+    }
+
+    .copy-btn.copied {
+      background: #10b981;
+    }
+
+    /* Copy Tooltip */
+    .copy-tooltip {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      background: #1e293b;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      margin-bottom: 5px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+    }
+
+    .copy-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 10px;
+      border: 4px solid transparent;
+      border-top-color: #1e293b;
+    }
+
+    .copy-tooltip.show {
+      opacity: 1;
+      animation: tooltipFade 0.3s ease;
+    }
+
+    @keyframes tooltipFade {
+      0% {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Copy Options Dropdown */
+    .copy-options {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      margin-bottom: 5px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 1000;
+      min-width: 150px;
+    }
+
+    .copy-options.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .copy-option-item {
+      padding: 8px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-option-item:last-child {
+      border-bottom: none;
+    }
+
+    .copy-option-item:hover {
+      background: #f8fafc;
+    }
+
+    .copy-option-item:active {
+      background: #f1f5f9;
     }
 
     .open-btn {
@@ -391,6 +512,7 @@
     }
   </style>
 </head>
+
 <body>
   <!-- Header -->
   <div class="header">
@@ -405,12 +527,7 @@
   <!-- Search Bar -->
   <div class="search-container">
     <div class="search-wrapper">
-      <input 
-        type="text" 
-        id="searchInput" 
-        class="search-input" 
-        placeholder="Search by text, source, or date..."
-      >
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by text, source, or date...">
       <button id="clearSearchBtn" class="clear-search-btn">✕</button>
     </div>
     <div class="filter-buttons">
@@ -439,7 +556,7 @@
     </button>
     <button id="openAllBtn" class="action-btn open-btn">
       Open All Links
-    </button>    
+    </button>
     <button id="exportImportBtn" class="action-btn menu-btn">
       Export / Import
     </button>
@@ -447,19 +564,14 @@
     <div id="exportImportMenu" class="menu hidden">
       <button id="exportPdfBtn" class="sub-btn">Export to PDF</button>
       <button id="exportJsonBtn" class="sub-btn">Export to JSON</button>
+      <button id="exportCsvBtn" class="sub-btn">Export to CSV</button>
       <button id="importJsonBtn" class="sub-btn">Import from JSON</button>
     </div>
-     <!-- Export Buttons Section -->
-
-  <div id="export-section" style="margin-top: 10px;">
-    <button id="export-json">Export as JSON</button>
-    <button id="export-csv">Export as CSV</button>
-  </div>
-    
   </div>
 
   <!-- Local jsPDF -->
   <script src="libs/jspdf.umd.min.js"></script>
   <script src="popup.js"></script>
 </body>
+
 </html>
