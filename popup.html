@@ -14,10 +14,18 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       width: 420px;
       min-height: 500px;
+      max-height: 600px;
       background: #f8fafc;
       display: flex;
       flex-direction: column;
       position: relative;
+      overflow: hidden;
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 80px; /* Space for fixed footer */
     }
 
     .header {
@@ -146,11 +154,8 @@
     }
 
     .highlights-container {
-      flex: 1;
       padding: 16px;
-      overflow-y: auto;
-      background: #f8fafc;
-      margin-bottom: 70px;
+      background: #f1f5f9;
     }
 
     .no-highlights {
@@ -364,6 +369,50 @@
       background: #f1f5f9;
     }
 
+    /* Pagination Styles */
+    .pagination-container {
+      text-align: center;
+      padding: 20px 16px 30px;
+      background: #f1f5f9;
+    }
+
+    .load-more-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 32px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .load-more-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .load-more-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .load-more-btn:disabled {
+      background: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .pagination-info {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
     .open-btn {
       background: #10b981;
       color: white;
@@ -401,24 +450,30 @@
       padding: 12px 16px;
       border-top: 1px solid #e2e8f0;
       display: flex;
-      justify-content: space-between;
-      gap: 12px;
+      flex-direction: column;
+      gap: 8px;
       box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+      z-index: 100;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 8px;
     }
 
     .action-btn {
       flex: 1;
-      padding: 12px 16px;
+      padding: 10px 12px;
       border: none;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      font-size: 13px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .clear-btn {
@@ -444,21 +499,21 @@
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
 
-    .highlights-container::-webkit-scrollbar {
-      width: 6px;
+    .main-content::-webkit-scrollbar {
+      width: 8px;
     }
 
-    .highlights-container::-webkit-scrollbar-track {
+    .main-content::-webkit-scrollbar-track {
       background: #f1f5f9;
       border-radius: 3px;
     }
 
-    .highlights-container::-webkit-scrollbar-thumb {
+    .main-content::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 3px;
     }
 
-    .highlights-container::-webkit-scrollbar-thumb:hover {
+    .main-content::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
     }
 
@@ -471,6 +526,7 @@
       font-size: 10px;
       padding: 2px 6px;
       border-radius: 8px;
+      font-weight: 600;
     }
 
     .loading {
@@ -478,13 +534,13 @@
       text-align: center;
       padding: 10px;
       color: #667eea;
+      font-weight: 500;
     }
 
     .menu {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      margin-top: 8px;
     }
 
     .hidden {
@@ -499,16 +555,35 @@
     .sub-btn {
       background: #374151;
       color: white;
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: 6px;
-      font-size: 14px;
+      font-size: 11px;
       cursor: pointer;
       transition: all 0.2s ease;
+      border: none;
+      font-weight: 500;
     }
 
     .sub-btn:hover {
       background: #4b5563;
       transform: translateY(-1px);
+    }
+
+    /* Smooth fade-in animation for new highlights */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .highlight-item.fade-in {
+      animation: fadeIn 0.3s ease;
     }
   </style>
 </head>
@@ -539,9 +614,18 @@
     <div id="searchResultsInfo" class="search-results-info"></div>
   </div>
 
-  <!-- Highlights Container -->
-  <div class="highlights-container" id="highlightsContainer">
-    <!-- Highlights will be loaded here by JavaScript -->
+  <!-- Main Content (scrollable) -->
+  <div class="main-content">
+    <!-- Highlights Container -->
+    <div class="highlights-container" id="highlightsContainer">
+      <!-- Highlights will be loaded here by JavaScript -->
+    </div>
+    
+    <!-- Pagination Container -->
+    <div class="pagination-container" id="paginationContainer" style="display: none;">
+      <button id="loadMoreBtn" class="load-more-btn">Load More</button>
+      <div class="pagination-info" id="paginationInfo"></div>
+    </div>
   </div>
 
   <!-- Loading Indicator -->
@@ -551,15 +635,17 @@
 
   <!-- Footer Actions -->
   <div class="footer">
-    <button id="clearBtn" class="action-btn clear-btn">
-      Clear All
-    </button>
-    <button id="openAllBtn" class="action-btn open-btn">
-      Open All Links
-    </button>
-    <button id="exportImportBtn" class="action-btn menu-btn">
-      Export / Import
-    </button>
+    <div class="footer-actions">
+      <button id="clearBtn" class="action-btn clear-btn">
+        Clear All
+      </button>
+      <button id="openAllBtn" class="action-btn open-btn">
+        Open Links
+      </button>
+      <button id="exportImportBtn" class="action-btn menu-btn">
+        Export/Import
+      </button>
+    </div>
 
     <div id="exportImportMenu" class="menu hidden">
       <button id="exportPdfBtn" class="sub-btn">Export to PDF</button>

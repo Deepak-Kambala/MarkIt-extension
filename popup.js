@@ -18,11 +18,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchResultsInfo = document.getElementById('searchResultsInfo');
     const filterButtons = document.querySelectorAll('.filter-btn');
 
+    // Pagination elements
+    const paginationContainer = document.getElementById('paginationContainer');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const paginationInfo = document.getElementById('paginationInfo');
+
     let currentHighlights = [];
     let filteredHighlights = [];
+    let displayedCount = 0; // Track how many we've displayed
     let isPdfReady = false;
     let currentSearchTerm = '';
     let currentDateFilter = 'all';
+
+    const HIGHLIGHTS_PER_PAGE = 5;
 
     // Check if PDF library is available
     function checkPdfLibrary() {
@@ -72,15 +80,28 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Load More button event listener
+    loadMoreBtn.addEventListener('click', function () {
+        loadMoreHighlights();
+    });
+
     function loadHighlights() {
         chrome.storage.local.get({ highlights: [] }, function (result) {
-            currentHighlights = result.highlights || [];
-            applyFilters();
-            updateStats(currentHighlights);
+            const newHighlights = result.highlights || [];
+            // Only re-render if the highlights have actually changed.
+            if (JSON.stringify(newHighlights) !== JSON.stringify(currentHighlights)) {
+                console.log('Highlights have changed, reloading...');
+                currentHighlights = newHighlights;
+                applyFilters();
+                updateStats(currentHighlights);
+            }
         });
     }
 
     function applyFilters() {
+        // Reset pagination
+        displayedCount = 0;
+
         // Start with all highlights
         filteredHighlights = [...currentHighlights];
 
@@ -92,7 +113,10 @@ document.addEventListener('DOMContentLoaded', function () {
             filteredHighlights = searchHighlights(filteredHighlights, currentSearchTerm);
         }
 
-        displayHighlights(filteredHighlights);
+        // Sort by date (newest first)
+        filteredHighlights.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        displayHighlights(true); // true = clear and start fresh
         updateSearchInfo(filteredHighlights.length, currentHighlights.length);
     }
 
@@ -157,27 +181,68 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function displayHighlights(highlights) {
-        highlightsContainer.innerHTML = '';
+    function displayHighlights(clearContainer = false) {
+        // If clearContainer is true, clear and reset
+        if (clearContainer) {
+            highlightsContainer.innerHTML = '';
+            displayedCount = 0;
+        }
 
-        if (!highlights || highlights.length === 0) {
+        if (!filteredHighlights || filteredHighlights.length === 0) {
             if (currentSearchTerm || currentDateFilter !== 'all') {
                 showNoResults();
             } else {
                 showNoHighlights();
             }
+            paginationContainer.style.display = 'none';
             return;
         }
 
-        const sortedHighlights = highlights.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Calculate how many to show
+        const endIndex = Math.min(displayedCount + HIGHLIGHTS_PER_PAGE, filteredHighlights.length);
+        const highlightsToShow = filteredHighlights.slice(displayedCount, endIndex);
 
-        sortedHighlights.forEach((highlight, index) => {
+        // Add highlights to display
+        highlightsToShow.forEach((highlight) => {
             const originalIndex = currentHighlights.findIndex(h =>
                 h.text === highlight.text && h.date === highlight.date && h.source === highlight.source
             );
             const highlightElement = createHighlightElement(highlight, originalIndex);
+            highlightElement.classList.add('fade-in');
             highlightsContainer.appendChild(highlightElement);
         });
+
+        // Update displayed count
+        displayedCount = endIndex;
+
+        // Update pagination UI
+        updatePaginationUI();
+    }
+
+    function loadMoreHighlights() {
+        displayHighlights(false); // false = append, don't clear
+    }
+
+    function updatePaginationUI() {
+        const totalFilteredCount = filteredHighlights.length;
+        const hasMore = displayedCount < totalFilteredCount;
+
+        if (totalFilteredCount > HIGHLIGHTS_PER_PAGE) {
+            paginationContainer.style.display = 'block';
+            paginationInfo.textContent = `Showing ${displayedCount} of ${totalFilteredCount} highlights`;
+
+            if (hasMore) {
+                loadMoreBtn.disabled = false;
+                const remaining = totalFilteredCount - displayedCount;
+                const nextBatch = Math.min(HIGHLIGHTS_PER_PAGE, remaining);
+                loadMoreBtn.textContent = `Load More`;
+            } else {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = 'All highlights loaded';
+            }
+        } else {
+            paginationContainer.style.display = 'none';
+        }
     }
 
     function createHighlightElement(highlight, index) {
@@ -319,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const originalText = button.textContent;
 
         button.classList.add('copied');
-        button.textContent = 'Copied';
+        button.textContent = '✓ Copied';
 
         // Show tooltip
         tooltip.textContent = 'Copied!';
@@ -412,7 +477,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Open all links
     // Open all links
     openAllBtn.addEventListener('click', function () {
         const highlightsToOpen = filteredHighlights.length > 0 ? filteredHighlights : currentHighlights;
