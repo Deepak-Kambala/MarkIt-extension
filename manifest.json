@@ -34,5 +34,9 @@
       "resources": ["libs/*"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+    "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": false
+  }
 }

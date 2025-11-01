@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const highlightsContainer = document.getElementById('highlightsContainer');
     const clearBtn = document.getElementById('clearBtn');
     const openAllBtn = document.getElementById('openAllBtn');
@@ -6,24 +6,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportImportBtn = document.getElementById('exportImportBtn');
     const exportPdfBtn = document.getElementById('exportPdfBtn');
     const exportJsonBtn = document.getElementById('exportJsonBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
     const importJsonBtn = document.getElementById('importJsonBtn');
     const totalCount = document.getElementById('totalCount');
     const todayCount = document.getElementById('todayCount');
     const loadingIndicator = document.getElementById('loadingIndicator');
-    
+
     // Search and filter elements
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
     const searchResultsInfo = document.getElementById('searchResultsInfo');
     const filterButtons = document.querySelectorAll('.filter-btn');
 
+    // Pagination elements
+    const paginationContainer = document.getElementById('paginationContainer');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const paginationInfo = document.getElementById('paginationInfo');
+
     let currentHighlights = [];
     let filteredHighlights = [];
+    let displayedCount = 0; // Track how many we've displayed
     let isPdfReady = false;
     let currentSearchTerm = '';
     let currentDateFilter = 'all';
     let currentTagFilter = ''; 
 
+
+    const HIGHLIGHTS_PER_PAGE = 5;
 
     // Check if PDF library is available
     function checkPdfLibrary() {
@@ -42,20 +51,20 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(checkPdfLibrary, 100);
 
     // Search input event listener
-    searchInput.addEventListener('input', function(e) {
+    searchInput.addEventListener('input', function (e) {
         currentSearchTerm = e.target.value.trim();
-        
+
         if (currentSearchTerm) {
             clearSearchBtn.classList.add('visible');
         } else {
             clearSearchBtn.classList.remove('visible');
         }
-        
+
         applyFilters();
     });
 
     // Clear search button
-    clearSearchBtn.addEventListener('click', function() {
+    clearSearchBtn.addEventListener('click', function () {
         searchInput.value = '';
         currentSearchTerm = '';
         clearSearchBtn.classList.remove('visible');
@@ -65,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Filter buttons event listeners
     filterButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             filterButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentDateFilter = this.dataset.filter;
@@ -73,15 +82,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Load More button event listener
+    loadMoreBtn.addEventListener('click', function () {
+        loadMoreHighlights();
+    });
+
     function loadHighlights() {
-        chrome.storage.local.get({ highlights: [] }, function(result) {
-            currentHighlights = result.highlights || [];
-            applyFilters();
-            updateStats(currentHighlights);
+        chrome.storage.local.get({ highlights: [] }, function (result) {
+            const newHighlights = result.highlights || [];
+            // Only re-render if the highlights have actually changed.
+            if (JSON.stringify(newHighlights) !== JSON.stringify(currentHighlights)) {
+                console.log('Highlights have changed, reloading...');
+                currentHighlights = newHighlights;
+                applyFilters();
+                updateStats(currentHighlights);
+            }
         });
     }
 
     function applyFilters() {
+        // Reset pagination
+        displayedCount = 0;
+
         // Start with all highlights
         filteredHighlights = [...currentHighlights];
 
@@ -93,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             filteredHighlights = searchHighlights(filteredHighlights, currentSearchTerm);
         }
 
+ feature/add-tags-filter
         //  Apply tag filter
         if (currentTagFilter) {
             filteredHighlights = filteredHighlights.filter(h =>
@@ -101,6 +124,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         displayHighlights(filteredHighlights);
+
+        // Sort by date (newest first)
+        filteredHighlights.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        displayHighlights(true); // true = clear and start fresh
+ main
         updateSearchInfo(filteredHighlights.length, currentHighlights.length);
     }
 
@@ -112,21 +141,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return highlights.filter(h => {
             const highlightDate = new Date(h.date);
-            
-            switch(filter) {
+
+            switch (filter) {
                 case 'today':
                     return highlightDate >= today;
-                
+
                 case 'week':
                     const weekAgo = new Date(today);
                     weekAgo.setDate(weekAgo.getDate() - 7);
                     return highlightDate >= weekAgo;
-                
+
                 case 'month':
                     const monthAgo = new Date(today);
                     monthAgo.setMonth(monthAgo.getMonth() - 1);
                     return highlightDate >= monthAgo;
-                
+
                 default:
                     return true;
             }
@@ -135,24 +164,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function searchHighlights(highlights, searchTerm) {
         const term = searchTerm.toLowerCase();
-        
+
         return highlights.filter(h => {
             // Search in text
             const textMatch = h.text.toLowerCase().includes(term);
-            
+
             // Search in source/domain
             let sourceMatch = false;
             try {
                 const domain = new URL(h.source).hostname;
-                sourceMatch = domain.toLowerCase().includes(term) || 
-                             h.source.toLowerCase().includes(term);
+                sourceMatch = domain.toLowerCase().includes(term) ||
+                    h.source.toLowerCase().includes(term);
             } catch (e) {
                 sourceMatch = h.source.toLowerCase().includes(term);
             }
-            
+
             // Search in date
             const dateMatch = formatDate(h.date).toLowerCase().includes(term);
-            
+
             return textMatch || sourceMatch || dateMatch;
         });
     }
@@ -165,35 +194,76 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function displayHighlights(highlights) {
-        highlightsContainer.innerHTML = '';
+    function displayHighlights(clearContainer = false) {
+        // If clearContainer is true, clear and reset
+        if (clearContainer) {
+            highlightsContainer.innerHTML = '';
+            displayedCount = 0;
+        }
 
-        if (!highlights || highlights.length === 0) {
+        if (!filteredHighlights || filteredHighlights.length === 0) {
             if (currentSearchTerm || currentDateFilter !== 'all') {
                 showNoResults();
             } else {
                 showNoHighlights();
             }
+            paginationContainer.style.display = 'none';
             return;
         }
 
-        const sortedHighlights = highlights.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Calculate how many to show
+        const endIndex = Math.min(displayedCount + HIGHLIGHTS_PER_PAGE, filteredHighlights.length);
+        const highlightsToShow = filteredHighlights.slice(displayedCount, endIndex);
 
-        sortedHighlights.forEach((highlight, index) => {
-            const originalIndex = currentHighlights.findIndex(h => 
+        // Add highlights to display
+        highlightsToShow.forEach((highlight) => {
+            const originalIndex = currentHighlights.findIndex(h =>
                 h.text === highlight.text && h.date === highlight.date && h.source === highlight.source
             );
             const highlightElement = createHighlightElement(highlight, originalIndex);
+            highlightElement.classList.add('fade-in');
             highlightsContainer.appendChild(highlightElement);
         });
+
+        // Update displayed count
+        displayedCount = endIndex;
+
+        // Update pagination UI
+        updatePaginationUI();
+    }
+
+    function loadMoreHighlights() {
+        displayHighlights(false); // false = append, don't clear
+    }
+
+    function updatePaginationUI() {
+        const totalFilteredCount = filteredHighlights.length;
+        const hasMore = displayedCount < totalFilteredCount;
+
+        if (totalFilteredCount > HIGHLIGHTS_PER_PAGE) {
+            paginationContainer.style.display = 'block';
+            paginationInfo.textContent = `Showing ${displayedCount} of ${totalFilteredCount} highlights`;
+
+            if (hasMore) {
+                loadMoreBtn.disabled = false;
+                const remaining = totalFilteredCount - displayedCount;
+                const nextBatch = Math.min(HIGHLIGHTS_PER_PAGE, remaining);
+                loadMoreBtn.textContent = `Load More`;
+            } else {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = 'All highlights loaded';
+            }
+        } else {
+            paginationContainer.style.display = 'none';
+        }
     }
 
     function createHighlightElement(highlight, index) {
         const div = document.createElement('div');
         div.className = 'highlight-item';
 
-        let displayText = highlight.text.length > 200 
-            ? highlight.text.substring(0, 200) + '...' 
+        let displayText = highlight.text.length > 200
+            ? highlight.text.substring(0, 200) + '...'
             : highlight.text;
 
         // Highlight search term in text
@@ -209,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const isToday = isTodayDate(highlight.date);
-        
+
         div.innerHTML = `
             ${isToday ? '<div class="new-badge">NEW</div>' : ''}
             <div class="highlight-text">"${displayText}"</div>
@@ -220,21 +290,141 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="highlight-date">${formatDate(highlight.date)}</span>
             </div>
             <div class="highlight-actions">
+                <div style="position: relative;">
+                    <button class="copy-btn" data-index="${index}" data-text="${escapeHtml(highlight.text)}" data-source="${escapeHtml(highlight.source)}">
+                        Copy
+                    </button>
+                    <div class="copy-tooltip">Copied!</div>
+                    <div class="copy-options">
+                        <div class="copy-option-item" data-action="copy-text">Copy Text Only</div>
+                        <div class="copy-option-item" data-action="copy-with-source">Copy with Source</div>
+                        <div class="copy-option-item" data-action="copy-markdown">Copy as Markdown</div>
+                    </div>
+                </div>
                 <button class="delete-btn" data-index="${index}">Delete</button>
             </div>
         `;
 
+        // Copy button functionality
+        const copyBtn = div.querySelector('.copy-btn');
+        const copyTooltip = div.querySelector('.copy-tooltip');
+        const copyOptions = div.querySelector('.copy-options');
+        const copyOptionItems = div.querySelectorAll('.copy-option-item');
+
+        // Simple click - copy text only
+        copyBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const text = highlight.text;
+            copyToClipboard(text, copyBtn, copyTooltip);
+        });
+
+        // Right-click or long press - show options
+        copyBtn.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            copyOptions.classList.toggle('show');
+        });
+
+        // Handle copy option selections
+        copyOptionItems.forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const action = this.dataset.action;
+                let textToCopy = '';
+
+                switch (action) {
+                    case 'copy-text':
+                        textToCopy = highlight.text;
+                        break;
+                    case 'copy-with-source':
+                        textToCopy = `"${highlight.text}"\n\nSource: ${highlight.source}`;
+                        break;
+                    case 'copy-markdown':
+                        textToCopy = `> ${highlight.text}\n\n[Source](${highlight.source})`;
+                        break;
+                }
+
+                copyToClipboard(textToCopy, copyBtn, copyTooltip);
+                copyOptions.classList.remove('show');
+            });
+        });
+
+        // Close options when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!copyBtn.contains(e.target) && !copyOptions.contains(e.target)) {
+                copyOptions.classList.remove('show');
+            }
+        });
+
         const deleteBtn = div.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', function() {
+        deleteBtn.addEventListener('click', function () {
             deleteHighlight(index);
         });
 
         return div;
     }
 
+    // Copy to clipboard function with visual feedback
+    async function copyToClipboard(text, button, tooltip) {
+        try {
+            // Modern Clipboard API (preferred)
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                textArea.remove();
+            }
+
+            // Visual feedback
+            showCopySuccess(button, tooltip);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            showCopyError(button, tooltip);
+        }
+    }
+
+    function showCopySuccess(button, tooltip) {
+        // Change button appearance
+        const originalText = button.textContent;
+
+        button.classList.add('copied');
+        button.textContent = '✓ Copied';
+
+        // Show tooltip
+        tooltip.textContent = 'Copied!';
+        tooltip.classList.add('show');
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+            button.classList.remove('copied');
+            button.textContent = originalText;
+            tooltip.classList.remove('show');
+        }, 2000);
+    }
+
+    function showCopyError(button, tooltip) {
+        tooltip.textContent = 'Failed to copy';
+        tooltip.style.background = '#ef4444';
+        tooltip.classList.add('show');
+
+        setTimeout(() => {
+            tooltip.classList.remove('show');
+            tooltip.style.background = '#1e293b';
+        }, 2000);
+    }
+
     function highlightSearchTerm(text, searchTerm) {
         if (!searchTerm) return escapeHtml(text);
-        
+
         const escapedText = escapeHtml(text);
         const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
         return escapedText.replace(regex, '<mark>$1</mark>');
@@ -266,7 +456,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateStats(highlights) {
         totalCount.textContent = `${highlights.length} ${highlights.length === 1 ? 'highlight' : 'highlights'}`;
-        
+
         const today = new Date().toDateString();
         const todayHighlights = highlights.filter(h => {
             try {
@@ -275,35 +465,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
         });
-        
+
         todayCount.textContent = `${todayHighlights.length} today`;
     }
 
     function deleteHighlight(index) {
         const updatedHighlights = currentHighlights.filter((_, i) => i !== index);
-        chrome.storage.local.set({ highlights: updatedHighlights }, function() {
+        chrome.storage.local.set({ highlights: updatedHighlights }, function () {
             loadHighlights();
         });
     }
 
     // Clear all highlights
-    clearBtn.addEventListener('click', function() {
+    clearBtn.addEventListener('click', function () {
         if (currentHighlights.length === 0) {
             alert('No highlights to clear!');
             return;
         }
 
         if (confirm(`Are you sure you want to delete all ${currentHighlights.length} highlights? This action cannot be undone.`)) {
-            chrome.storage.local.set({ highlights: [] }, function() {
+            chrome.storage.local.set({ highlights: [] }, function () {
                 loadHighlights();
             });
         }
     });
 
     // Open all links
-    openAllBtn.addEventListener('click', function() {
+    openAllBtn.addEventListener('click', function () {
         const highlightsToOpen = filteredHighlights.length > 0 ? filteredHighlights : currentHighlights;
-        
+
         if (highlightsToOpen.length === 0) {
             alert('No highlights with links to open!');
             return;
@@ -326,7 +516,8 @@ document.addEventListener('DOMContentLoaded', function() {
         exportImportMenu.classList.toggle('hidden');
     });
 
-    exportJsonBtn.addEventListener('click', function() {
+    // Export to JSON
+    exportJsonBtn.addEventListener('click', function () {
         if (currentHighlights.length === 0) {
             alert('No highlights to export!');
             return;
@@ -345,17 +536,45 @@ document.addEventListener('DOMContentLoaded', function() {
         URL.revokeObjectURL(url);
     });
 
-    importJsonBtn.addEventListener('click', function() {
+    // Export to CSV
+    exportCsvBtn.addEventListener('click', function () {
+        if (currentHighlights.length === 0) {
+            alert('No highlights to export!');
+            return;
+        }
+
+        const headers = ['Text', 'Source', 'Date'];
+        const rows = currentHighlights.map(h => [
+            `"${h.text.replace(/"/g, '""')}"`,
+            `"${h.source.replace(/"/g, '""')}"`,
+            `"${h.date}"`
+        ]);
+
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        a.download = `highlights-${timestamp}.csv`;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    });
+
+    // Import from JSON
+    importJsonBtn.addEventListener('click', function () {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
 
-        input.onchange = function(event) {
+        input.onchange = function (event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const importedHighlights = JSON.parse(e.target.result);
 
@@ -372,7 +591,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
 
-                    chrome.storage.local.set({ highlights: mergedHighlights }, function() {
+                    chrome.storage.local.set({ highlights: mergedHighlights }, function () {
                         loadHighlights();
                         alert(`Imported ${importedHighlights.length} highlights successfully!`);
                     });
@@ -388,7 +607,8 @@ document.addEventListener('DOMContentLoaded', function() {
         input.click();
     });
 
-    exportPdfBtn.addEventListener('click', function() {
+    // Export to PDF
+    exportPdfBtn.addEventListener('click', function () {
         if (currentHighlights.length === 0) {
             alert('No highlights to export!');
             return;
@@ -465,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 doc.textWithLink(linkText, margin, y, { url: link });
                 y += 6;
             });
-            
+
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `highlights-${timestamp}.pdf`;
 
@@ -501,7 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatDate(dateString) {
         try {
             const date = new Date(dateString);
-            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         } catch {
             return dateString;
         }
