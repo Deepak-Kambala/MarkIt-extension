@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let isPdfReady = false;
     let currentSearchTerm = '';
     let currentDateFilter = 'all';
+    let currentTagFilter = ''; 
+
 
     const HIGHLIGHTS_PER_PAGE = 5;
 
@@ -113,10 +115,21 @@ document.addEventListener('DOMContentLoaded', function () {
             filteredHighlights = searchHighlights(filteredHighlights, currentSearchTerm);
         }
 
+ feature/add-tags-filter
+        //  Apply tag filter
+        if (currentTagFilter) {
+            filteredHighlights = filteredHighlights.filter(h =>
+                h.tags && h.tags.map(t => t.toLowerCase()).includes(currentTagFilter.toLowerCase())
+            );
+        }
+
+        displayHighlights(filteredHighlights);
+
         // Sort by date (newest first)
         filteredHighlights.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         displayHighlights(true); // true = clear and start fresh
+ main
         updateSearchInfo(filteredHighlights.length, currentHighlights.length);
     }
 
@@ -726,4 +739,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Refresh highlights every 3 seconds when popup is open
     setInterval(loadHighlights, 3000);
+
+const tagInput = document.getElementById('tagInput');
+const addTagBtn = document.getElementById('addTagBtn');
+const tagList = document.getElementById('tagList');
+
+addTagBtn.addEventListener('click', () => {
+    const tag = tagInput.value.trim();
+    if (!tag) return alert('Please enter a tag name!');
+    currentTagFilter = tag;
+    applyFilters();
+    renderTagList();
+    tagInput.value = '';
+});
+
+function renderTagList() {
+    tagList.innerHTML = '';
+    const allTags = new Set();
+    currentHighlights.forEach(h => {
+        if (h.tags) h.tags.forEach(t => allTags.add(t));
+    });
+
+    allTags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'tag-btn';
+        btn.textContent = tag;
+        if (tag === currentTagFilter) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+            currentTagFilter = tag === currentTagFilter ? '' : tag;
+            applyFilters();
+            renderTagList();
+        });
+        tagList.appendChild(btn);
+    });
+}
+
 });

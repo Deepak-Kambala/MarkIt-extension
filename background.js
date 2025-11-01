@@ -21,11 +21,37 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
             console.warn("Highlight Saver: Cannot inject into this page:", tab.url);
             return;
         }
-
-        // Execute script to save highlight
+        // Ask the user for a tag before saving
         chrome.scripting.executeScript({
             target: { tabId: tab.id },
-            func: saveHighlightToStorage,
+            func: (text, url) => {
+                const tag = prompt("Add a tag for this highlight (e.g., Study, Work):") || "General";
+                const newHighlight = {
+                    text: text.trim(),
+                    source: url,
+                    date: new Date().toISOString(),
+                    tags: [tag.trim()]
+                };
+
+                chrome.storage.local.get({ highlights: [] }, (result) => {
+                    const highlights = result.highlights || [];
+
+                    const isDuplicate = highlights.some(h =>
+                        h.text.trim().toLowerCase() === newHighlight.text.toLowerCase() &&
+                        h.source === newHighlight.source
+                    );
+
+                    if (!isDuplicate) {
+                        const updated = [newHighlight, ...highlights];
+                        chrome.storage.local.set({ highlights: updated }, () => {
+                            chrome.runtime.sendMessage({
+                                action: "highlightSaved",
+                                data: newHighlight
+                            });
+                        });
+                    }
+                });
+            },
             args: [info.selectionText.trim(), info.pageUrl]
         }).catch(err => {
             console.error("Script injection failed:", err);
@@ -33,37 +59,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     }
 });
 
-// Function to save highlight (executed in page context)
-function saveHighlightToStorage(text, url) {
-    const newHighlight = {
-        text: text.trim(),
-        source: url,
-        date: new Date().toISOString() // better to store in ISO format
-    };
-
-    chrome.storage.local.get({ highlights: [] }, (result) => {
-        const highlights = result.highlights || [];
-        
-        // Check for duplicates (case-insensitive + trim)
-        const isDuplicate = highlights.some(highlight => 
-            highlight.text.trim().toLowerCase() === newHighlight.text.toLowerCase() && 
-            highlight.source === newHighlight.source
-        );
-
-        if (!isDuplicate) {
-            // Add new highlight to beginning of array
-            const updatedHighlights = [newHighlight, ...highlights];
-            
-            chrome.storage.local.set({ highlights: updatedHighlights }, () => {
-                // Show notification via background
-                chrome.runtime.sendMessage({
-                    action: "highlightSaved",
-                    data: newHighlight
-                });
-            });
-        }
-    });
-}
 
 // Handle messages (show notifications)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

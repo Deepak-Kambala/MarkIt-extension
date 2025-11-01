@@ -568,6 +568,34 @@
       background: #4b5563;
       transform: translateY(-1px);
     }
+feature/add-tags-filter
+    .tag-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag-btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 6px;
+      background: #ddd;
+      cursor: pointer;
+    }
+
+    .tag-btn.active {
+      background: #4a90e2;
+      color: #fff;
+    }
+
+
 
     /* Smooth fade-in animation for new highlights */
     @keyframes fadeIn {
@@ -585,6 +613,7 @@
     .highlight-item.fade-in {
       animation: fadeIn 0.3s ease;
     }
+main
   </style>
 </head>
 
@@ -613,6 +642,21 @@
     </div>
     <div id="searchResultsInfo" class="search-results-info"></div>
   </div>
+<div class="tag-filter">
+  <label for="tagSelect" style="font-size:12px; color:#64748b;">Filter by Tag:</label>
+  <select id="tagSelect" style="padding:6px; border-radius:6px; border:1px solid #e2e8f0; margin-left:6px;">
+    <option value="all">All Tags</option>
+  </select>
+</div>
+<div class="tag-filter-container">
+  <input type="text" id="tagInput" placeholder="Add or search by tag (e.g., Study, Work)" />
+  <button id="addTagBtn">Add Tag</button>
+  <div id="tagList"></div>
+</div>
+
+
+
+
 
   <!-- Main Content (scrollable) -->
   <div class="main-content">
@@ -658,6 +702,11 @@
   <!-- Local jsPDF -->
   <script src="libs/jspdf.umd.min.js"></script>
   <script src="popup.js"></script>
+  <script>
+  document.body.style.background = "#fff";
+  document.body.style.padding = "10px";
+  document.getElementById("tagInput")?.setAttribute("style", "display:block !important; border:1px solid red; padding:5px; width:80%;");
+</script>
 </body>
 
 </html>
