@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let isPdfReady = false;
     let currentSearchTerm = '';
     let currentDateFilter = 'all';
+    let currentTagFilter = ''; 
+
 
     // Check if PDF library is available
     function checkPdfLibrary() {
@@ -89,6 +91,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Apply search filter
         if (currentSearchTerm) {
             filteredHighlights = searchHighlights(filteredHighlights, currentSearchTerm);
+        }
+
+        //  Apply tag filter
+        if (currentTagFilter) {
+            filteredHighlights = filteredHighlights.filter(h =>
+                h.tags && h.tags.map(t => t.toLowerCase()).includes(currentTagFilter.toLowerCase())
+            );
         }
 
         displayHighlights(filteredHighlights);
@@ -510,4 +519,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Refresh highlights every 3 seconds when popup is open
     setInterval(loadHighlights, 3000);
+
+const tagInput = document.getElementById('tagInput');
+const addTagBtn = document.getElementById('addTagBtn');
+const tagList = document.getElementById('tagList');
+
+addTagBtn.addEventListener('click', () => {
+    const tag = tagInput.value.trim();
+    if (!tag) return alert('Please enter a tag name!');
+    currentTagFilter = tag;
+    applyFilters();
+    renderTagList();
+    tagInput.value = '';
+});
+
+function renderTagList() {
+    tagList.innerHTML = '';
+    const allTags = new Set();
+    currentHighlights.forEach(h => {
+        if (h.tags) h.tags.forEach(t => allTags.add(t));
+    });
+
+    allTags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'tag-btn';
+        btn.textContent = tag;
+        if (tag === currentTagFilter) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+            currentTagFilter = tag === currentTagFilter ? '' : tag;
+            applyFilters();
+            renderTagList();
+        });
+        tagList.appendChild(btn);
+    });
+}
+
 });
