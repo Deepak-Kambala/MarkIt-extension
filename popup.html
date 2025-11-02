@@ -594,6 +594,93 @@ feature/add-tags-filter
       background: #4a90e2;
       color: #fff;
     }
+    /* === Tag UI styling === */
+.tag-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #eef2ff;
+  box-shadow: 0 1px 3px rgba(2,6,23,0.03);
+}
+
+.tag-filter label { font-size: 12px; color: #64748b; }
+
+.tag-filter-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+#tagInput {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #e6eef8;
+  background: #fbfdff;
+  font-size: 13px;
+  outline: none;
+}
+
+#tagInput:focus { box-shadow: 0 0 0 4px rgba(99,102,241,0.06); border-color: #6366f1; }
+
+#addTagBtn {
+  background: #6366f1;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+#addTagBtn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(99,102,241,0.12); }
+
+/* tag chip list */
+#tagList { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.tag-btn {
+  background: #eef2ff;
+  color: #1f2937;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display:inline-flex;
+  gap:6px; align-items:center;
+}
+.tag-btn:hover { transform: translateY(-2px); }
+.tag-btn.active {
+  background: #4f46e5;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(79,70,229,0.18);
+}
+
+/* tag color variants (optional; will use class like t-Study) */
+.tag-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  display:inline-block;
+  vertical-align:middle;
+}
+.t-Study { background:#e0f2fe; color:#075985; }
+.t-Work  { background:#ecfdf5; color:#065f46; }
+.t-Research { background:#fff7ed; color:#92400e; }
+.t-Recipe { background:#fef3c7; color:#78350f; }
+
+/* Highlight entry: show tags as badges */
+.highlight-tags { margin-top:6px; display:flex; gap:6px; flex-wrap:wrap; }
+.highlight-tags .tag-badge { box-shadow: 0 1px 0 rgba(0,0,0,0.03); }
+
+/* make everything compact in popup */
+.highlights-container { max-height: 340px; }
+
 
 
 
@@ -707,6 +794,8 @@ main
   document.body.style.padding = "10px";
   document.getElementById("tagInput")?.setAttribute("style", "display:block !important; border:1px solid red; padding:5px; width:80%;");
 </script>
+<div id="tagList"></div>
+
 </body>
 
 </html>

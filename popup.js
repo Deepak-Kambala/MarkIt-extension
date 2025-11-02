@@ -279,7 +279,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const isToday = isTodayDate(highlight.date);
+<<<<<<< HEAD
 
+=======
+        
+        
+>>>>>>> cfad409 (Enhance tag UI)
         div.innerHTML = `
             ${isToday ? '<div class="new-badge">NEW</div>' : ''}
             <div class="highlight-text">"${displayText}"</div>
@@ -360,6 +365,24 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteBtn.addEventListener('click', function () {
             deleteHighlight(index);
         });
+        // add edit tag button
+const editBtn = document.createElement('button');
+editBtn.className = 'sub-btn';
+editBtn.textContent = 'Tag';
+editBtn.addEventListener('click', () => {
+  const newTag = prompt('Add a tag for this highlight (e.g., Study)');
+  if (newTag && newTag.trim()) {
+    const updatedHighlights = [...currentHighlights];
+    if (!updatedHighlights[index].tags) updatedHighlights[index].tags = [];
+    if (!updatedHighlights[index].tags.includes(newTag.trim())) {
+      updatedHighlights[index].tags.push(newTag.trim());
+      chrome.storage.local.set({ highlights: updatedHighlights }, () => {
+          loadHighlights();
+      });
+    }
+  }
+});
+div.querySelector('.highlight-actions').appendChild(editBtn);
 
         return div;
     }
