@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentHighlights = [];
     let filteredHighlights = [];
-    let displayedCount = 0; // Track how many we've displayed
+    let displayedCount = 0;
     let isPdfReady = false;
     let currentSearchTerm = '';
     let currentDateFilter = 'all';
@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadHighlights() {
         chrome.storage.local.get({ highlights: [] }, function (result) {
             const newHighlights = result.highlights || [];
-            // Only re-render if the highlights have actually changed.
             if (JSON.stringify(newHighlights) !== JSON.stringify(currentHighlights)) {
                 console.log('Highlights have changed, reloading...');
                 currentHighlights = newHighlights;
@@ -99,24 +98,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function applyFilters() {
-        // Reset pagination
         displayedCount = 0;
-
-        // Start with all highlights
         filteredHighlights = [...currentHighlights];
-
-        // Apply date filter
         filteredHighlights = filterByDate(filteredHighlights, currentDateFilter);
 
-        // Apply search filter
         if (currentSearchTerm) {
             filteredHighlights = searchHighlights(filteredHighlights, currentSearchTerm);
         }
 
-        // Sort by date (newest first)
         filteredHighlights.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        displayHighlights(true); // true = clear and start fresh
+        displayHighlights(true);
         updateSearchInfo(filteredHighlights.length, currentHighlights.length);
     }
 
@@ -132,17 +123,14 @@ document.addEventListener('DOMContentLoaded', function () {
             switch (filter) {
                 case 'today':
                     return highlightDate >= today;
-
                 case 'week':
                     const weekAgo = new Date(today);
                     weekAgo.setDate(weekAgo.getDate() - 7);
                     return highlightDate >= weekAgo;
-
                 case 'month':
                     const monthAgo = new Date(today);
                     monthAgo.setMonth(monthAgo.getMonth() - 1);
                     return highlightDate >= monthAgo;
-
                 default:
                     return true;
             }
@@ -153,10 +141,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const term = searchTerm.toLowerCase();
 
         return highlights.filter(h => {
-            // Search in text
             const textMatch = h.text.toLowerCase().includes(term);
 
-            // Search in source/domain
             let sourceMatch = false;
             try {
                 const domain = new URL(h.source).hostname;
@@ -166,9 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 sourceMatch = h.source.toLowerCase().includes(term);
             }
 
-            // Search in date
             const dateMatch = formatDate(h.date).toLowerCase().includes(term);
-
             return textMatch || sourceMatch || dateMatch;
         });
     }
@@ -182,7 +166,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function displayHighlights(clearContainer = false) {
-        // If clearContainer is true, clear and reset
         if (clearContainer) {
             highlightsContainer.innerHTML = '';
             displayedCount = 0;
@@ -198,11 +181,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Calculate how many to show
         const endIndex = Math.min(displayedCount + HIGHLIGHTS_PER_PAGE, filteredHighlights.length);
         const highlightsToShow = filteredHighlights.slice(displayedCount, endIndex);
 
-        // Add highlights to display
         highlightsToShow.forEach((highlight) => {
             const originalIndex = currentHighlights.findIndex(h =>
                 h.text === highlight.text && h.date === highlight.date && h.source === highlight.source
@@ -212,15 +193,12 @@ document.addEventListener('DOMContentLoaded', function () {
             highlightsContainer.appendChild(highlightElement);
         });
 
-        // Update displayed count
         displayedCount = endIndex;
-
-        // Update pagination UI
         updatePaginationUI();
     }
 
     function loadMoreHighlights() {
-        displayHighlights(false); // false = append, don't clear
+        displayHighlights(false);
     }
 
     function updatePaginationUI() {
@@ -233,8 +211,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (hasMore) {
                 loadMoreBtn.disabled = false;
-                const remaining = totalFilteredCount - displayedCount;
-                const nextBatch = Math.min(HIGHLIGHTS_PER_PAGE, remaining);
                 loadMoreBtn.textContent = `Load More`;
             } else {
                 loadMoreBtn.disabled = true;
@@ -253,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function () {
             ? highlight.text.substring(0, 200) + '...'
             : highlight.text;
 
-        // Highlight search term in text
         if (currentSearchTerm) {
             displayText = highlightSearchTerm(displayText, currentSearchTerm);
         }
@@ -292,27 +267,23 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
 
-        // Copy button functionality
         const copyBtn = div.querySelector('.copy-btn');
         const copyTooltip = div.querySelector('.copy-tooltip');
         const copyOptions = div.querySelector('.copy-options');
         const copyOptionItems = div.querySelectorAll('.copy-option-item');
 
-        // Simple click - copy text only
         copyBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             const text = highlight.text;
             copyToClipboard(text, copyBtn, copyTooltip);
         });
 
-        // Right-click or long press - show options
         copyBtn.addEventListener('contextmenu', function (e) {
             e.preventDefault();
             e.stopPropagation();
             copyOptions.classList.toggle('show');
         });
 
-        // Handle copy option selections
         copyOptionItems.forEach(item => {
             item.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -336,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Close options when clicking outside
         document.addEventListener('click', function (e) {
             if (!copyBtn.contains(e.target) && !copyOptions.contains(e.target)) {
                 copyOptions.classList.remove('show');
@@ -351,14 +321,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return div;
     }
 
-    // Copy to clipboard function with visual feedback
     async function copyToClipboard(text, button, tooltip) {
         try {
-            // Modern Clipboard API (preferred)
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(text);
             } else {
-                // Fallback for older browsers
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
                 textArea.style.position = 'fixed';
@@ -371,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 textArea.remove();
             }
 
-            // Visual feedback
             showCopySuccess(button, tooltip);
         } catch (err) {
             console.error('Failed to copy:', err);
@@ -380,17 +346,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showCopySuccess(button, tooltip) {
-        // Change button appearance
         const originalText = button.textContent;
 
         button.classList.add('copied');
         button.textContent = '✓ Copied';
 
-        // Show tooltip
         tooltip.textContent = 'Copied!';
         tooltip.classList.add('show');
 
-        // Reset after 2 seconds
         setTimeout(() => {
             button.classList.remove('copied');
             button.textContent = originalText;
@@ -463,7 +426,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Clear all highlights
     clearBtn.addEventListener('click', function () {
         if (currentHighlights.length === 0) {
             alert('No highlights to clear!');
@@ -594,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function () {
         input.click();
     });
 
-    // Export to PDF
+    // Export to PDF - ENHANCED VERSION
     exportPdfBtn.addEventListener('click', function () {
         if (currentHighlights.length === 0) {
             alert('No highlights to export!');
@@ -611,77 +573,208 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const doc = new jspdf.jsPDF();
-
-            doc.setFontSize(20);
-            doc.text('My MarkIt Highlights', 20, 20);
-
-            doc.setFontSize(12);
-            doc.text(`Exported on: ${new Date().toLocaleString()}`, 20, 35);
-            doc.text(`Total Highlights: ${currentHighlights.length}`, 20, 45);
-
-            let y = 60;
+            const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;
             const margin = 20;
-            const maxWidth = 170;
+            const contentWidth = pageWidth - (margin * 2);
+
+            // Helper function to add header/footer
+            function addPageDecoration(pageNum, totalPages) {
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${pageNum} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                doc.text('Generated by MarkIt', margin, pageHeight - 10);
+            }
+
+            // Cover Page with purple header
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 0, pageWidth, 80, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(32);
+            doc.setFont(undefined, 'bold');
+            doc.text('MarkIt Highlights', pageWidth / 2, 40, { align: 'center' });
+
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text('Your Saved Web Highlights', pageWidth / 2, 55, { align: 'center' });
+
+            // Summary Box
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(margin, 100, contentWidth, 60, 3, 3, 'F');
+            
+            doc.setTextColor(51, 65, 85);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text('Summary', margin + 10, 115);
+
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.text(`Total Highlights: ${currentHighlights.length}`, margin + 10, 130);
+            doc.text(`Export Date: ${new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })}`, margin + 10, 140);
+            
+            const uniqueSources = [...new Set(currentHighlights.map(h => {
+                try { return new URL(h.source).hostname; } catch { return h.source; }
+            }))];
+            doc.text(`Unique Sources: ${uniqueSources.length}`, margin + 10, 150);
+
+            // Table of Contents
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(51, 65, 85);
+            doc.text('Table of Contents', margin, 185);
+
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(100, 116, 139);
+            
+            let tocY = 200;
+            const maxTocItems = 15;
+            currentHighlights.slice(0, maxTocItems).forEach((highlight, index) => {
+                const preview = highlight.text.substring(0, 60) + (highlight.text.length > 60 ? '...' : '');
+                doc.text(`${index + 1}. ${preview}`, margin + 5, tocY);
+                tocY += 6;
+            });
+
+            if (currentHighlights.length > maxTocItems) {
+                doc.setTextColor(150, 150, 150);
+                doc.text(`... and ${currentHighlights.length - maxTocItems} more`, margin + 5, tocY);
+            }
+
+            // Start highlights on new page
+            doc.addPage();
+            let y = 30;
+            let pageNum = 2;
 
             currentHighlights.forEach((highlight, index) => {
-                if (y > pageHeight - 40) {
+                // Check if we need a new page
+                const estimatedHeight = 50 + (Math.ceil(highlight.text.length / 80) * 5);
+                if (y + estimatedHeight > pageHeight - 30) {
+                    addPageDecoration(pageNum, '?');
                     doc.addPage();
-                    y = 20;
+                    y = 30;
+                    pageNum++;
                 }
 
-                doc.setFontSize(14);
-                doc.setFont(undefined, 'bold');
-                doc.text(`Highlight ${index + 1}:`, margin, y);
-                y += 8;
+                // Highlight Card Background
+                doc.setFillColor(255, 255, 255);
+                doc.setDrawColor(226, 232, 240);
+                doc.roundedRect(margin, y - 5, contentWidth, estimatedHeight, 2, 2, 'FD');
 
+                // Highlight Number Badge
+                doc.setFillColor(102, 126, 234);
+                doc.circle(margin + 8, y + 2, 5, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'bold');
+                doc.text(`${index + 1}`, margin + 8, y + 3.5, { align: 'center' });
+
+                // Highlight Text
+                doc.setTextColor(30, 41, 59);
                 doc.setFontSize(10);
                 doc.setFont(undefined, 'normal');
-                const textLines = doc.splitTextToSize(highlight.text, maxWidth);
-                doc.text(textLines, margin, y);
-                y += textLines.length * 5 + 5;
+                const textLines = doc.splitTextToSize(`"${highlight.text}"`, contentWidth - 30);
+                doc.text(textLines, margin + 18, y + 2);
+                y += textLines.length * 5 + 8;
 
-                doc.setFontSize(9);
-                doc.setTextColor(0, 0, 255);
-                doc.textWithLink(`Source: ${highlight.source}`, margin, y, { url: highlight.source });
+                // Divider line
+                doc.setDrawColor(241, 245, 249);
+                doc.line(margin + 10, y, pageWidth - margin - 10, y);
                 y += 5;
 
-                doc.setTextColor(100, 100, 100);
-                doc.text(`Saved: ${highlight.date}`, margin, y);
-                y += 15;
-
-                doc.setTextColor(0, 0, 0);
-            });
-
-            if (y > pageHeight - 60) {
-                doc.addPage();
-                y = 20;
-            }
-            const uniqueSources = [...new Set(currentHighlights.map(h => h.source).filter(Boolean))];
-
-            doc.setFontSize(11);
-            doc.setTextColor(0, 0, 255);
-            doc.setFont(undefined, 'bold');
-            doc.text('All Links (unique)', margin, y);
-            y += 8;
-
-            uniqueSources.forEach(link => {
-                const linkText = link.length > 80 ? link.substring(0, 80) + '...' : link;
+                // Source
                 doc.setFontSize(9);
+                doc.setTextColor(102, 126, 234);
+                doc.setFont(undefined, 'bold');
+                doc.text('Source:', margin + 10, y);
+                
                 doc.setFont(undefined, 'normal');
-                doc.textWithLink(linkText, margin, y, { url: link });
+                doc.setTextColor(59, 130, 246);
+                let domain = highlight.source;
+                try {
+                    domain = new URL(highlight.source).hostname;
+                } catch (e) {}
+                
+                const sourceText = domain.length > 50 ? domain.substring(0, 50) + '...' : domain;
+                doc.textWithLink(sourceText, margin + 30, y, { url: highlight.source });
                 y += 6;
+
+                // Date
+                doc.setTextColor(100, 116, 139);
+                doc.setFont(undefined, 'bold');
+                doc.text('Saved:', margin + 10, y);
+                
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(148, 163, 184);
+                doc.text(formatDate(highlight.date), margin + 30, y);
+                y += 15;
             });
+
+            // Add Links Appendix
+            addPageDecoration(pageNum, '?');
+            doc.addPage();
+            pageNum++;
+            y = 30;
+
+            // Appendix Header
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 20, pageWidth, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('All Unique Sources', pageWidth / 2, 35, { align: 'center' });
+
+            y = 60;
+            doc.setFontSize(9);
+            doc.setTextColor(51, 65, 85);
+            doc.setFont(undefined, 'normal');
+
+            uniqueSources.forEach((source, index) => {
+                if (y > pageHeight - 30) {
+                    addPageDecoration(pageNum, '?');
+                    doc.addPage();
+                    y = 30;
+                    pageNum++;
+                }
+
+                doc.setFont(undefined, 'bold');
+                doc.text(`${index + 1}.`, margin, y);
+                
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(59, 130, 246);
+                
+                const fullUrl = currentHighlights.find(h => {
+                    try { return new URL(h.source).hostname === source; } catch { return h.source === source; }
+                })?.source || source;
+                
+                const linkText = source.length > 70 ? source.substring(0, 70) + '...' : source;
+                doc.textWithLink(linkText, margin + 8, y, { url: fullUrl });
+                doc.setTextColor(51, 65, 85);
+                y += 7;
+            });
+
+            // Update all page numbers
+            const totalPages = pageNum;
+            for (let i = 2; i <= totalPages; i++) {
+                doc.setPage(i);
+                addPageDecoration(i, totalPages);
+            }
 
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const filename = `highlights-${timestamp}.pdf`;
+            const filename = `markit-highlights-${timestamp}.pdf`;
 
             doc.save(filename);
 
             setTimeout(() => {
                 loadingIndicator.style.display = 'none';
                 exportPdfBtn.disabled = false;
-                alert(`PDF exported successfully! Saved as: ${filename}`);
+                alert(`✓ PDF exported successfully!\n\nFilename: ${filename}\nHighlights: ${currentHighlights.length}\nPages: ${totalPages}`);
             }, 1000);
 
         } catch (error) {
