@@ -29,8 +29,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let isPdfReady = false;
     let currentSearchTerm = '';
     let currentDateFilter = 'all';
-    let currentTagFilter = ''; 
-
 
     const HIGHLIGHTS_PER_PAGE = 5;
 
@@ -115,21 +113,10 @@ document.addEventListener('DOMContentLoaded', function () {
             filteredHighlights = searchHighlights(filteredHighlights, currentSearchTerm);
         }
 
- feature/add-tags-filter
-        //  Apply tag filter
-        if (currentTagFilter) {
-            filteredHighlights = filteredHighlights.filter(h =>
-                h.tags && h.tags.map(t => t.toLowerCase()).includes(currentTagFilter.toLowerCase())
-            );
-        }
-
-        displayHighlights(filteredHighlights);
-
         // Sort by date (newest first)
         filteredHighlights.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         displayHighlights(true); // true = clear and start fresh
- main
         updateSearchInfo(filteredHighlights.length, currentHighlights.length);
     }
 
@@ -279,12 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const isToday = isTodayDate(highlight.date);
-<<<<<<< HEAD
 
-=======
-        
-        
->>>>>>> cfad409 (Enhance tag UI)
         div.innerHTML = `
             ${isToday ? '<div class="new-badge">NEW</div>' : ''}
             <div class="highlight-text">"${displayText}"</div>
@@ -365,24 +347,6 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteBtn.addEventListener('click', function () {
             deleteHighlight(index);
         });
-        // add edit tag button
-const editBtn = document.createElement('button');
-editBtn.className = 'sub-btn';
-editBtn.textContent = 'Tag';
-editBtn.addEventListener('click', () => {
-  const newTag = prompt('Add a tag for this highlight (e.g., Study)');
-  if (newTag && newTag.trim()) {
-    const updatedHighlights = [...currentHighlights];
-    if (!updatedHighlights[index].tags) updatedHighlights[index].tags = [];
-    if (!updatedHighlights[index].tags.includes(newTag.trim())) {
-      updatedHighlights[index].tags.push(newTag.trim());
-      chrome.storage.local.set({ highlights: updatedHighlights }, () => {
-          loadHighlights();
-      });
-    }
-  }
-});
-div.querySelector('.highlight-actions').appendChild(editBtn);
 
         return div;
     }
@@ -895,39 +859,4 @@ div.querySelector('.highlight-actions').appendChild(editBtn);
 
     // Refresh highlights every 3 seconds when popup is open
     setInterval(loadHighlights, 3000);
-
-const tagInput = document.getElementById('tagInput');
-const addTagBtn = document.getElementById('addTagBtn');
-const tagList = document.getElementById('tagList');
-
-addTagBtn.addEventListener('click', () => {
-    const tag = tagInput.value.trim();
-    if (!tag) return alert('Please enter a tag name!');
-    currentTagFilter = tag;
-    applyFilters();
-    renderTagList();
-    tagInput.value = '';
-});
-
-function renderTagList() {
-    tagList.innerHTML = '';
-    const allTags = new Set();
-    currentHighlights.forEach(h => {
-        if (h.tags) h.tags.forEach(t => allTags.add(t));
-    });
-
-    allTags.forEach(tag => {
-        const btn = document.createElement('button');
-        btn.className = 'tag-btn';
-        btn.textContent = tag;
-        if (tag === currentTagFilter) btn.classList.add('active');
-        btn.addEventListener('click', () => {
-            currentTagFilter = tag === currentTagFilter ? '' : tag;
-            applyFilters();
-            renderTagList();
-        });
-        tagList.appendChild(btn);
-    });
-}
-
 });
